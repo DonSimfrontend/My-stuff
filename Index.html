@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+
+  <title>Astronaut FPS Sketch</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      background: white;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+
+  <!-- p5.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+
+<body>
+
+<script>
+// ===============================
+// FPS STYLE ASTRONAUT SKETCH
+// ===============================
+
+let player;
+let velocity;
+let clones = [];
+
+let lastMoveX = 0;
+let lastMoveY = 0;
+
+// camera / look input
+let lookX = 0;
+let lookY = 0;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+
+  player = createVector(width / 2, height / 2);
+  velocity = createVector(0, 0);
+
+  lastMoveX = player.x;
+  lastMoveY = player.y;
+}
+
+function draw() {
+  background(255);
+
+  // ===============================
+  // PLAYER PHYSICS (FPS STYLE)
+  // ===============================
+
+  player.add(velocity);
+  velocity.mult(0.88); // friction
+
+  let move = createVector(lookX, lookY);
+  move.limit(1.5);
+  velocity.add(move);
+
+  // track movement velocity
+  let vx = player.x - lastMoveX;
+  let vy = player.y - lastMoveY;
+
+  lastMoveX = player.x;
+  lastMoveY = player.y;
+
+  let speed = sqrt(vx * vx + vy * vy);
+
+  // spawn clones based on movement speed
+  if (speed > 1.2) {
+    clones.push({
+      x: player.x,
+      y: player.y,
+      vx: vx * 2.5,
+      vy: vy * 2.5,
+      life: 60
+    });
+  }
+
+  // ===============================
+  // UPDATE + DRAW CLONES
+  // ===============================
+  for (let i = clones.length - 1; i >= 0; i--) {
+    let c = clones[i];
+
+    c.x += c.vx;
+    c.y += c.vy;
+    c.life--;
+
+    drawAstronaut(c.x, c.y, 0.6, c.life);
+
+    if (c.life <= 0) {
+      clones.splice(i, 1);
+    }
+  }
+
+  // draw player
+  drawAstronaut(player.x, player.y, 1.0, 255);
+
+  // UI
+  fill(0);
+  noStroke();
+  textSize(16);
+  text("Move mouse or drag finger (FPS style)", 20, 30);
+
+  // decay look input
+  lookX *= 0.85;
+  lookY *= 0.85;
+}
+
+// ===============================
+// INPUT (MOUSE + TOUCH)
+// ===============================
+
+// desktop mouse
+function mouseDragged() {
+  lookX += movedX * 0.15;
+  lookY += movedY * 0.15;
+}
+
+// mobile touch
+function touchMoved() {
+  if (touches.length > 0) {
+    lookX += movedX * 0.15;
+    lookY += movedY * 0.15;
+  }
+  return false; // stop scroll
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+// ===============================
+// DRAW ASTRONAUT
+// ===============================
+
+function drawAstronaut(x, y, s, alphaVal) {
+  push();
+  translate(x, y);
+  scale(s);
+
+  stroke(0);
+  fill(80, 160, 255, alphaVal);
+
+  // backpack
+  rect(-12, -5, 8, 18, 2);
+
+  // body
+  ellipse(0, 5, 22, 28);
+
+  // helmet
+  ellipse(0, -12, 24, 24);
+
+  // visor
+  fill(255, alphaVal);
+  ellipse(0, -12, 14, 10);
+
+  // legs
+  line(-5, 18, -5, 28);
+  line(5, 18, 5, 28);
+
+  // arms
+  line(-11, 2, -20, 10);
+  line(11, 2, 20, 10);
+
+  pop();
+}
+
+</script>
+
+</body>
+</html>
